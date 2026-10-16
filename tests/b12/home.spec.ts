@@ -1,59 +1,49 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { LoginPage } from '../../scr/pages/login.page';
 
-test.describe('Verify Login Page', () => {
-    test.beforeEach('', async ({ page }) => {
-        // Truy cập trang login
-        await page.goto("http://regtool.vitex.asia:8009/admin/login");
+const loginUrl = 'http://regtool.vitex.asia:8009/admin/login';
 
-    })
+// Nhóm các kịch bản cùng kiểm tra trang đăng nhập.
+test.describe('Login page', () => {
+  // beforeEach chạy trước từng test, nên mỗi kịch bản bắt đầu từ trang login mới.
+  test.beforeEach(async ({ page }) => {
+    await page.goto(loginUrl);
+  });
 
-    test('Login successfully', async ({ page }) => {
-        const testData = {
-            email: "admin@yopmail.com",
-            password: "password"
-        };
+  test('logs in with valid credentials', async ({ page }) => {
+    // Page Object gom các thao tác nhập email, mật khẩu và bấm Login.
+    const loginPage = new LoginPage(page);
 
-        const loginPage = new LoginPage(page);
+    await loginPage.login('admin@yopmail.com', 'password');
 
-        // login thành công
-        await loginPage.login(testData.email, testData.password);
+    // Sau khi đăng nhập thành công, trình duyệt phải rời URL trang login.
+    await expect(page).not.toHaveURL(loginUrl);
+  });
 
-    });
+  test('shows required-field errors when submitted empty', async ({ page }) => {
+    const loginPage = new LoginPage(page);
 
-    test("Login Faile with blank email and password field", async ({ page }) => {
+    // Không nhập dữ liệu và gửi form để kiểm tra hai trường bắt buộc.
+    await loginPage.clickBtnLogin();
 
-        const loginPage = new LoginPage(page);
+    // Giữ nguyên XPath cũ: tìm thẻ strong trong span.help-block có đúng nội dung lỗi.
+    const emailError = page.locator('//span[@class="help-block"]/strong[normalize-space()="The email field is required."]');
+    const passwordError = page.locator('//span[@class="help-block"]/strong[normalize-space()="The password field is required."]');
 
-        // click btn Login khi bỏ trống các field
-        await loginPage.clickBtnLogin();
+    // toBeVisible kiểm tra thông báo thực sự hiển thị cho người dùng.
+    await expect(emailError).toBeVisible();
+    await expect(passwordError).toBeVisible();
+  });
 
-        // Verify hiển thị msg lỗi
+  test('shows an error for invalid credentials', async ({ page }) => {
+    const loginPage = new LoginPage(page);
 
-        const emailError = page.locator('//span[@class="help-block"]/strong[normalize-space()="The email field is required."]');
-        const passwordError = page.locator('//span[@class="help-block"]/strong[normalize-space()="The password field is required."]');
+    // Đăng nhập bằng thông tin sai và kiểm tra thông báo phản hồi.
+    await loginPage.login('abc@gmail.com', '12345');
 
-        await expect(emailError).toBeVisible();
-        await expect(passwordError).toBeVisible();
-
-    });
-
-    test('Login Failed with wrong email and wrong password', async ({ page }) => {
-
-        const testData = {
-            email: "abc@gmail.com",
-            password: "12345"
-        };
-
-        const loginPage = new LoginPage(page);
-
-        // Nhập thông tin 
-        await loginPage.login(testData.email, testData.password);
-
-        //verify msg
-        const msgError = page.getByText('The email address or password you have entered was not correct. Please try again!', { exact: true });
-        await expect(msgError).toBeVisible();
-    });
-
-})
-
+    // exact: true yêu cầu nội dung khớp chính xác với chuỗi bên dưới.
+    const msgError = page.getByText('The email address or password you have entered was not correct. Please try again!', { exact: true });
+    // Thanh debug của trang đôi khi lặp lại cùng text. Phần tử đầu tiên là lỗi trong form.
+    await expect(msgError.first()).toBeVisible();
+  });
+});
