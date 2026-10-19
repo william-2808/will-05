@@ -30,7 +30,7 @@ test.describe('Verify màn hình Airplane', () => {
        await expect(rows.first()).toBeVisible();
     })
 
-    test('Checkbox chọn tất cả ban đầu chưa được chọn', async ({ page }) => {
+    test('Kiểm tra trạng thái ban đầu của checkbox', async ({ page }) => {
         const airPlane = new AirPlane(page);
         await expect(airPlane.checkbox).not.toBeChecked();
     });
