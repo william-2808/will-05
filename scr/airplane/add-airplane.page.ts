@@ -15,7 +15,7 @@ export class AddPlane {
         this.inputRegisNumber = page.getByLabel('Registration number')
         this.inputCapacity = page.locator('//input[@id="capacity"]')
         this.inputMaxInfants = page.locator('//input[@id="max_infants"]')
-        this.btnSaveAndClose = page.locator('//button[@type="button"][1]')
+        this.btnSaveAndClose = page.getByRole('button', {name: 'Save and Close', exact: true})
         this.btnSave = page.getByRole('button', {name: "Save", exact: true});
         this.btnCancel = page.locator('//a[@class="btn btn-default airplane-cancel"]')
     }

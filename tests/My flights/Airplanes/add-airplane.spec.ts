@@ -32,11 +32,10 @@ test.describe('Kiểm tra màn hình thêm máy bay', () => {
     test('Thêm máy bay bằng nút Save and Close', async ({ page }) => {
         const addPlane = new AddPlane(page);
 
-        await addPlane.addInformation('William 02', 'WW02', '02222', '023');
-
-        const msg = page.locator('//div[@class="col-md-12"]');
-
-        await expect(msg).toBeVisible();
+        await addPlane.fillInputName('William 02');
+        await addPlane.fillInputRegisNumber('e123');
+        await addPlane.fillInputCapacity('122');
+        await addPlane.clickBtnSaveAClose();
 
         const rows = page.locator('.flight-table .row[id^="tr-"]');
         const airplaneRow = rows.filter({
